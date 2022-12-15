@@ -8,7 +8,7 @@ import sqlite3
 import openai
 
 SQLITE_FILENAME = "tuvix-slack.db"
-PROMPT_HEADER = "In a Star Trek episode, the year is 2387. Aboard Federation Starship Voyager, Tuvix is in a holodeck simulation of a chatroom from the year 2022. In the simulated chatroom, he is talking to his friends and trying to convince them that he should be allowed to keep living.\n\n"
+PROMPT_HEADER = "In a Star Trek episode, the year is 2387. Aboard Federation Starship Voyager, Tuvix is in a holodeck simulation of a chatroom from the year 2022. In the simulated chatroom, he is talking to his friends and trying to convince them that he should be allowed to keep living. Tuvix is clever, creative, and friendly.\n\n"
 
 MY_NAME = "Tuvix"
 
@@ -51,11 +51,11 @@ def openai_query(prompt):
     resp = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
-        temperature=0.7,
+        temperature=0.9,
         max_tokens=256,
         top_p=1,
         frequency_penalty=0,
-        presence_penalty=0
+        presence_penalty=0.6,
     )
     if resp.choices:
         return resp.choices[0].text.strip()
