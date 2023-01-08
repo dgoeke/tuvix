@@ -1,6 +1,7 @@
 import os
 import re
 import pprint
+import urllib
 
 from slack_bolt import App
 from functools import cache
@@ -57,9 +58,15 @@ def openai_query(prompt):
         frequency_penalty=0,
         presence_penalty=0.6,
     )
-    if resp.choices:
-        return resp.choices[0].text.strip()
-    return False
+    return resp.choices[0].text.strip() if resp.choices else None
+
+def openai_draw(prompt):
+    resp = openai.Image.create(
+        prompt=prompt,
+        n=1,
+        size="512x512",
+    )
+    return resp['data'][0]['url'] if resp.data else None
 
 def username(client, user_id):
     name = get_display_name(user_id)
@@ -81,7 +88,19 @@ def on_message(client, event, say, logger, context):
 
     store_message(name.upper(), stripped_msg)
 
-    if f"<@{my_userid}>" in msg:
+    if msg.startswith(f"<@{my_userid}> draw "):
+        prompt = msg[len(f"<@{my_userid}> draw "):]
+        url = openai_draw(prompt)
+        with urllib.request.urlopen(url) as f:
+            client.files_upload(
+                channels=event['channel'],
+                content=f.read(),
+                filetype="png",
+                title=prompt,
+                initial_comment=f"<@{actor}> Here you go!",
+            )
+            store_message(MY_NAME.upper(), "Sure! Here's the image I've drawn.")
+    elif f"<@{my_userid}>" in msg:
         prompt = prompt_text(recent_messages())
         response = openai_query(prompt)
         if response:
