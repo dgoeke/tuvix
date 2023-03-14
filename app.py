@@ -49,16 +49,16 @@ def prompt_text(messages):
     return PROMPT_HEADER + lines + "\n\n" + MY_NAME.upper() + ":"
 
 def openai_query(prompt):
-    resp = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=prompt,
+    resp = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role":"user","content":prompt}],
         temperature=0.9,
         max_tokens=256,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0.6,
     )
-    return resp.choices[0].text.strip() if resp.choices else None
+    return resp['choices'][0]['message']['content'] if ['choices'][0] else None
 
 def openai_draw(prompt):
     resp = openai.Image.create(
