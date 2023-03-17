@@ -9,7 +9,8 @@ import sqlite3
 import openai
 
 SQLITE_FILENAME = "tuvix-slack.db"
-PROMPT_HEADER = "In a Star Trek episode, the year is 2387. Aboard Federation Starship Voyager, Tuvix is in a holodeck simulation of a chatroom from the year 2022. In the simulated chatroom, he is talking to his friends and trying to convince them that he should be allowed to keep living. Tuvix is clever, creative, and friendly.\n\n"
+
+PROMPT_HEADER = "In the setting of Star Trek Voyager, this is a chat log of the character Tuvix from Star Trek Voyager and some of his friends in a holodeck simulation of the year 2023. I want you to respond with the next line of dialogue that Tuvix would say, using the manner and vocabulary Tuvix would use. Do not write any explanations. Only answer like Tuvix. Tuvix is creative, clever, and friendly. You must know all of the knowledge of Tuvix. Do not put quotes around your answer. Only respond with the text of Tuvix's message."
 
 MY_NAME = "Tuvix"
 
@@ -46,17 +47,16 @@ def get_display_name(userid):
 
 def prompt_text(messages):
     lines = "\n".join(f"{actor}: {message}" for (actor, message) in messages)
-    return PROMPT_HEADER + lines + "\n\n" + MY_NAME.upper() + ":"
+    return PROMPT_HEADER + lines + "\n\n" + MY_NAME + ":"
 
 def openai_query(prompt):
     resp = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role":"user","content":prompt}],
-        temperature=0.9,
+        temperature=0.8,
         max_tokens=256,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0.6,
+        frequency_penalty=0.7,
+        presence_penalty=0.7,
     )
     return resp['choices'][0]['message']['content'] if ['choices'][0] else None
 
@@ -86,7 +86,7 @@ def on_message(client, event, say, logger, context):
     stripped_msg = re.sub(f"\<@({my_userid})\>", MY_NAME, msg)
     name = username(client, actor)
 
-    store_message(name.upper(), stripped_msg)
+    store_message(name, stripped_msg)
 
     if msg.startswith(f"<@{my_userid}> draw "):
         prompt = msg[len(f"<@{my_userid}> draw "):]
@@ -99,12 +99,13 @@ def on_message(client, event, say, logger, context):
                 title=prompt,
                 initial_comment=f"<@{actor}> Here you go!",
             )
-            store_message(MY_NAME.upper(), "Sure! Here's the image I've drawn.")
+            store_message(MY_NAME, "Sure! Here's the image I've drawn.")
     elif f"<@{my_userid}>" in msg:
         prompt = prompt_text(recent_messages())
         response = openai_query(prompt)
+
         if response:
-            store_message(MY_NAME.upper(), response)
+            store_message(MY_NAME, response)
             say(f"<@{actor}> {response}")
 
 
